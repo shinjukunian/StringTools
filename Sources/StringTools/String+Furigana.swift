@@ -8,6 +8,7 @@
 import Foundation
 import CoreText
 
+@available(watchOS 3.0, *)
 @available(OSX 10.12, *)
 @available(iOS 10.0, *)
 extension String{
