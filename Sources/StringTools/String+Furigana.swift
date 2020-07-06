@@ -12,7 +12,7 @@ import CoreText
 @available(OSX 10.12, *)
 @available(iOS 10.0, *)
 extension String{
-    public func furiganaAttributedString(furigana:String, kanjiOnly:Bool = true) -> NSAttributedString{
+    public func furiganaAttributedString(furigana:String, kanjiOnly:Bool = true, useRomaji:Bool = false) -> NSAttributedString{
         let hiraganaRanges=self.hiraganaRanges
         var transliteration=furigana
         var range=self.startIndex..<self.endIndex
@@ -46,7 +46,16 @@ extension String{
             }
         }
         
-        let annotation=CTRubyAnnotationCreateWithAttributes(.auto, .auto, .before, transliteration as CFString, [:] as CFDictionary)
+        let annotation:CTRubyAnnotation
+        if useRomaji{
+            let romajiString=transliteration.romanizedString(method: .hepburn)
+            annotation=CTRubyAnnotationCreateWithAttributes(.auto, .auto, .before, romajiString as CFString, [:] as CFDictionary)
+        }
+        else{
+            annotation=CTRubyAnnotationCreateWithAttributes(.auto, .auto, .before, transliteration as CFString, [:] as CFDictionary)
+        }
+        
+        
         let att=NSMutableAttributedString(string: self)
         if transliteration.count > 0{
             att.addAttributes([NSAttributedString.Key(kCTRubyAnnotationAttributeName as String):annotation], range: NSRange(range, in: self))
