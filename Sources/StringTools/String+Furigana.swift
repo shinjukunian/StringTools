@@ -35,14 +35,16 @@ extension String{
                 let t2=transliteration[newTransliterationRange]
                 transliteration=String(t2)
             default:
-                let leadingDistance=self.distance(from: self.startIndex, to: hiraganaRange.lowerBound)
-                let trailingDistance=self.distance(from: self.endIndex, to: hiraganaRange.upperBound)
-                let transliterationStart=transliteration.index(transliteration.startIndex, offsetBy: leadingDistance)
-                let transliterationEnd=transliteration.index(transliteration.endIndex, offsetBy: trailingDistance)
-                let newTransliterationRange=transliterationStart..<transliterationEnd
-                let length=self.distance(from: hiraganaRange.lowerBound, to: hiraganaRange.upperBound)
-                let replacementString=String(repeatElement("　", count: length))
-                transliteration.replaceSubrange(newTransliterationRange, with: replacementString)
+//                let leadingDistance=self.distance(from: self.startIndex, to: hiraganaRange.lowerBound)
+//                let trailingDistance=self.distance(from: self.endIndex, to: hiraganaRange.upperBound)
+//                let transliterationStart=transliteration.index(transliteration.startIndex, offsetBy: leadingDistance)
+//                let transliterationEnd=transliteration.index(transliteration.endIndex, offsetBy: trailingDistance)
+//                let newTransliterationRange=transliterationStart..<transliterationEnd
+//                let length=self.distance(from: hiraganaRange.lowerBound, to: hiraganaRange.upperBound)
+//                let replacementString=String(repeatElement("　", count: length))
+//                transliteration.replaceSubrange(newTransliterationRange, with: replacementString)
+                let detectedCenterHiragana=self[hiraganaRange]
+                transliteration = transliteration.replacingOccurrences(of: detectedCenterHiragana, with: "　")
             }
         }
         

@@ -18,6 +18,45 @@ final class StringToolsTests: XCTestCase {
         XCTAssertEqual(text, "hi　da")
         
     }
+    
+    
+    
+    @available(OSX 10.12, *)
+    func testCenter(){
+        let string="上り坂"
+        let furigana="のぼりざか"
+        let ruby=string.furiganaAttributedString(furigana: furigana, kanjiOnly: true, useRomaji: false)
+        
+        ruby.enumerateAttribute(NSAttributedString.Key(kCTRubyAnnotationAttributeName as String), in: NSRange(location: 0, length: ruby.length), options: [], using: {annotation, range, _ in
+            if annotation == nil {return}
+            let annotation=annotation as! CTRubyAnnotation
+            guard let rubyString=CTRubyAnnotationGetTextForPosition(annotation, .before) as String? else {
+                XCTFail()
+                return
+            }
+            XCTAssertEqual(rubyString, "のぼ　ざか")
+        })
+    }
+    
+    @available(OSX 10.12, *)
+    func testCenter2(){
+        let string="歌い上げる"
+        let furigana="うたいあげる"
+        let ruby=string.furiganaAttributedString(furigana: furigana, kanjiOnly: true, useRomaji: false)
+        
+        ruby.enumerateAttribute(NSAttributedString.Key(kCTRubyAnnotationAttributeName as String), in: NSRange(location: 0, length: ruby.length), options: [], using: {annotation, range, _ in
+            if annotation == nil {return}
+            let annotation=annotation as! CTRubyAnnotation
+            guard let rubyString=CTRubyAnnotationGetTextForPosition(annotation, .before) as String? else {
+                XCTFail()
+                return
+            }
+            XCTAssertEqual(rubyString, "うた　あ")
+        })
+    }
+    
+    
+    
 
     @available(OSX 10.12, *)
     @available(iOS 10.0, *)
