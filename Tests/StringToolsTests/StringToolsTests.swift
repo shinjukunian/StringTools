@@ -21,6 +21,7 @@ final class StringToolsTests: XCTestCase {
     
     
     
+    @available(iOS 10.0, *)
     @available(OSX 10.12, *)
     func testCenter(){
         let string="上り坂"
@@ -38,6 +39,7 @@ final class StringToolsTests: XCTestCase {
         })
     }
     
+    @available(iOS 10.0, *)
     @available(OSX 10.12, *)
     func testCenter2(){
         let string="歌い上げる"
@@ -53,6 +55,16 @@ final class StringToolsTests: XCTestCase {
             }
             XCTAssertEqual(rubyString, "うた　あ")
         })
+    }
+    
+    @available(iOS 10.0, *)
+    func testFurigana(){
+        let string="歌い上げる"
+        let att=string.furiganaAttributedString(kanjiOnly: true, useRomaji: false)
+        XCTAssert(att.length > 0)
+        let string2="熊はとても怖いですよ。"
+        let att2=string2.furiganaAttributedString(kanjiOnly: true, useRomaji: false)
+        XCTAssert(att2.length > 0)
     }
     
     
