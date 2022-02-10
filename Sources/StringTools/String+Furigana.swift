@@ -17,25 +17,61 @@ extension String{
         public let base:String
         public let reading:String
         public let range:Range<String.Index>
+        
+        func cleanupFurigana(text:String)->SystemTokenizerAnnotation{
+            var range=self.range
+            var transliteration=self.reading
+            
+            let hiraganaRanges=self.base.hiraganaRanges
+            
+            for hiraganaRange in hiraganaRanges{
+                switch hiraganaRange {
+                case _ where hiraganaRange.upperBound == self.base.endIndex:
+                    let trailingDistance=self.base.distance(from: self.base.endIndex, to: hiraganaRange.lowerBound)
+                    let newEndIndex=text.index(range.upperBound, offsetBy: trailingDistance)
+                    range=range.lowerBound..<newEndIndex
+                    let transliterationEnd=transliteration.index(transliteration.endIndex, offsetBy: trailingDistance)
+                    let newTransliterationRange=transliteration.startIndex..<transliterationEnd
+                    let t2=transliteration[newTransliterationRange]
+                    transliteration=String(t2)
+                case _ where hiraganaRange.lowerBound == self.base.startIndex:
+                    let leadingDistance=self.base.distance(from: self.base.startIndex, to: hiraganaRange.upperBound)
+                    let newStartIndex=text.index(range.lowerBound, offsetBy: leadingDistance)// wrong?
+                    range=newStartIndex..<range.upperBound
+                    let transliterationStart=transliteration.index(transliteration.startIndex, offsetBy: leadingDistance)
+                    let newTransliterationRange=transliterationStart..<transliteration.endIndex
+                    let t2=transliteration[newTransliterationRange]
+                    transliteration=String(t2)
+                default:
+                    let detectedCenterHiragana=self.base[hiraganaRange]
+                    transliteration = transliteration.replacingOccurrences(of: detectedCenterHiragana, with: "　")
+                }
+            }
+            
+            return SystemTokenizerAnnotation(base: base, reading: transliteration, range: range)
+        }
     }
     
     public func furiganaAttributedString(furigana:String, kanjiOnly:Bool = true, useRomaji:Bool = false) -> NSAttributedString{
         
-        let transliteration=furigana.cleanupFurigana(base: self)
-        let range=self.startIndex..<self.endIndex
+        var furiganaAnnotation=SystemTokenizerAnnotation(base: self, reading: furigana, range: self.startIndex..<self.endIndex)
+        if kanjiOnly{
+            furiganaAnnotation=furiganaAnnotation.cleanupFurigana(text: self)
+        }
         let annotation:CTRubyAnnotation
+        
         if useRomaji{
-            let romajiString=transliteration.romanizedString(method: .hepburn)
+            let romajiString=furiganaAnnotation.reading.romanizedString(method: .hepburn)
             annotation=CTRubyAnnotationCreateWithAttributes(.auto, .auto, .before, romajiString as CFString, [:] as CFDictionary)
         }
         else{
-            annotation=CTRubyAnnotationCreateWithAttributes(.auto, .auto, .before, transliteration as CFString, [:] as CFDictionary)
+            annotation=CTRubyAnnotationCreateWithAttributes(.auto, .auto, .before, furiganaAnnotation.reading as CFString, [:] as CFDictionary)
         }
         
-        
         let att=NSMutableAttributedString(string: self)
-        if transliteration.count > 0{
-            att.addAttributes([NSAttributedString.Key(kCTRubyAnnotationAttributeName as String):annotation], range: NSRange(range, in: self))
+        
+        if furiganaAnnotation.reading.isEmpty == false{
+            att.addAttributes([NSAttributedString.Key(kCTRubyAnnotationAttributeName as String):annotation], range: NSRange(furiganaAnnotation.range, in: self))
         }
         return att
         
@@ -96,53 +132,26 @@ extension String{
     public func furiganaAttributedString(kanjiOnly:Bool = true, useRomaji:Bool = false)-> NSAttributedString{
         let annotations=self.furiganaAnnotations.filter({$0.base.containsKanjiCharacters})
         let att=NSMutableAttributedString(string: self)
-        for annotation in annotations{
+        
+        for var annotation in annotations{
+            if kanjiOnly{
+                annotation=annotation.cleanupFurigana(text: self)
+            }            
             let transliteration:String
-            switch(kanjiOnly,useRomaji){
-            case (true,true):
-                transliteration = annotation.reading.cleanupFurigana(base: annotation.base).romanizedString()
-            case (true,false):
-                transliteration = annotation.reading.cleanupFurigana(base: annotation.base)
-            case (false,true):
-                transliteration = annotation.reading.romanizedString()
-            case (false,false):
+            if useRomaji{
+                transliteration=annotation.reading.romanizedString()
+            }
+            else{
                 transliteration=annotation.reading
             }
+            
+            
             let ruby=CTRubyAnnotationCreateWithAttributes(.auto, .auto, .before, transliteration as CFString, [:] as CFDictionary)
+            
             att.addAttributes([NSAttributedString.Key(kCTRubyAnnotationAttributeName as String):ruby], range: NSRange(annotation.range, in: self))
         }
         return att
     }
     
-    
-    public func cleanupFurigana(base:String)->String{
-        
-        let hiraganaRanges=base.hiraganaRanges
-        var transliteration=self
-        
-        for hiraganaRange in hiraganaRanges{
-            switch hiraganaRange {
-            case _ where hiraganaRange.upperBound == base.endIndex:
-                let trailingDistance=base.distance(from: base.endIndex, to: hiraganaRange.lowerBound)
-                
-                let transliterationEnd=transliteration.index(transliteration.endIndex, offsetBy: trailingDistance)
-                let newTransliterationRange=transliterationEnd..<transliteration.endIndex
-                transliteration.replaceSubrange(newTransliterationRange, with: "　")
-                
-            case _ where hiraganaRange.lowerBound == base.startIndex:
-                let leadingDistance=base.distance(from: base.startIndex, to: hiraganaRange.upperBound)
-                
-                let transliterationStart=transliteration.index(transliteration.startIndex, offsetBy: leadingDistance)
-                let newTransliterationRange=transliteration.startIndex..<transliterationStart
-                transliteration.replaceSubrange(newTransliterationRange, with: "　")
-                
-            default:
-                let detectedCenterHiragana=base[hiraganaRange]
-                transliteration = transliteration.replacingOccurrences(of: detectedCenterHiragana, with: "　")
-            }
-            
-        }
-        return transliteration
-    }
     
 }
