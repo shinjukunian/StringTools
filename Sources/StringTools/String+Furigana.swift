@@ -14,9 +14,16 @@ import CoreText
 extension String{
     
     public struct SystemTokenizerAnnotation{
+        
         public let base:String
         public let reading:String
         public let range:Range<String.Index>
+        
+        public init(base: String, reading: String, range: Range<String.Index>) {
+            self.base = base
+            self.reading = reading
+            self.range = range
+        }
         
         func cleanupFurigana(text:String)->SystemTokenizerAnnotation{
             var range=self.range
