@@ -141,6 +141,20 @@ final class StringToolsTests: XCTestCase {
         
     }
     
+    func testMixed(){
+        let string="お電話番号は１１１１１です。"
+        let att=string.furiganaAttributedString(kanjiOnly: false, useRomaji: true, convertAll: true)
+        XCTAssert(att.length > 0)
+        let ruby=att.rubyRanges
+        XCTAssert(ruby.isEmpty == false)
+        let firstRuby=try! XCTUnwrap(ruby.first)
+        XCTAssertEqual(firstRuby.1, "o")
+        XCTAssertEqual(firstRuby.0, NSRange(string.range(of: "お")!, in: string))
+        
+    }
+    
+    
+    
     
     
 

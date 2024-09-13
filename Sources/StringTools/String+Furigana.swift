@@ -136,8 +136,17 @@ extension String{
     }
     
     
-    public func furiganaAttributedString(kanjiOnly:Bool = true, useRomaji:Bool = false)-> NSAttributedString{
-        let annotations=self.furiganaAnnotations.filter({$0.base.containsKanjiCharacters})
+    public func furiganaAttributedString(kanjiOnly:Bool = true, useRomaji:Bool = false, convertAll:Bool = false)-> NSAttributedString{
+        
+        let annotations:[SystemTokenizerAnnotation]
+        if convertAll{
+            annotations=self.furiganaAnnotations.filter({$0.base.japaneseScriptType != .noJapaneseScript})
+
+        }
+        else{
+            annotations=self.furiganaAnnotations.filter({$0.base.containsKanjiCharacters})
+        }
+        
         let att=NSMutableAttributedString(string: self)
         
         for var annotation in annotations{
